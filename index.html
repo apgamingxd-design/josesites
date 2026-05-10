@@ -1,0 +1,1382 @@
+m<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JoseSites — Custom Websites</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+  <script src="https://js.stripe.com/v3/" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #03060f;
+      --surface: #060d1a;
+      --surface2: #0a1528;
+      --surface3: #0e1d36;
+      --blue: #1a6fe8;
+      --blue-light: #4d9fff;
+      --blue-bright: #00c3ff;
+      --blue-dark: #0d3d8a;
+      --blue-muted: rgba(26,111,232,0.15);
+      --blue-glow: rgba(0,195,255,0.25);
+      --white: #e8f4ff;
+      --white-muted: rgba(232,244,255,0.55);
+      --white-faint: rgba(232,244,255,0.07);
+      --border: rgba(26,111,232,0.18);
+      --border2: rgba(0,195,255,0.35);
+      --text: #e8f4ff;
+      --muted: rgba(232,244,255,0.5);
+      --heading: 'Cinzel', serif;
+      --body: 'Rajdhani', sans-serif;
+      --jp: 'Noto Sans JP', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      font-size: 16px;
+      line-height: 1.75;
+      overflow-x: hidden;
+    }
+
+    /* ══ BACKGROUND PATTERN — HIDDEN LEAF VILLAGE ══ */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(26,111,232,0.12) 0%, transparent 70%),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231a6fe8' fill-opacity='0.04'%3E%3Cpath d='M30 0L60 30L30 60L0 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ══ GRAIN ══ */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9998; opacity: 0.5;
+    }
+
+    /* ══ SCROLL REVEAL ══ */
+    .reveal { opacity: 0; transform: translateY(36px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-left { opacity: 0; transform: translateX(-36px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .reveal-left.visible { opacity: 1; transform: translateX(0); }
+    .reveal-right { opacity: 0; transform: translateX(36px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .reveal-right.visible { opacity: 1; transform: translateX(0); }
+    .d1{transition-delay:.05s} .d2{transition-delay:.15s} .d3{transition-delay:.25s} .d4{transition-delay:.35s} .d5{transition-delay:.45s}
+
+    /* ══ CURSOR GLOW ══ */
+    #cursor-glow {
+      position: fixed; width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(0,195,255,0.05) 0%, transparent 70%);
+      border-radius: 50%; pointer-events: none; z-index: 1;
+      transform: translate(-50%, -50%); transition: opacity 0.3s;
+    }
+
+    /* ══ KUNAI DECORATIONS ══ */
+    .kunai-deco {
+      position: absolute;
+      width: 2px; height: 40px;
+      background: linear-gradient(to bottom, var(--blue-bright), transparent);
+      opacity: 0.4;
+      animation: kunaiFloat 3s ease-in-out infinite;
+    }
+    @keyframes kunaiFloat { 0%,100%{transform:translateY(0) rotate(-45deg)} 50%{transform:translateY(-8px) rotate(-45deg)} }
+
+    /* ══ CHAKRA ORBS ══ */
+    .chakra-orb {
+      position: absolute; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,195,255,0.3), transparent);
+      animation: chakraPulse 4s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes chakraPulse { 0%,100%{transform:scale(1);opacity:0.4} 50%{transform:scale(1.3);opacity:0.7} }
+
+    /* ══ NAV ══ */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 5vw; height: 72px;
+      background: rgba(3,6,15,0.92);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--blue-bright), transparent);
+      opacity: 0.6;
+    }
+    .logo {
+      font-family: var(--heading);
+      font-size: 1.3rem; font-weight: 700;
+      letter-spacing: 4px; color: var(--white);
+      text-decoration: none;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .logo-mark {
+      width: 38px; height: 38px; position: relative;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    /* Shuriken shape made of two rotated squares */
+    .logo-mark::before,
+    .logo-mark::after {
+      content: '';
+      position: absolute;
+      width: 20px; height: 20px;
+      background: var(--blue);
+      border-radius: 2px;
+    }
+    .logo-mark::before {
+      animation: shurikenSpin 4s linear infinite;
+      box-shadow: 0 0 10px rgba(0,195,255,0.5);
+    }
+    .logo-mark::after {
+      animation: shurikenSpin 4s linear infinite;
+      animation-delay: -2s;
+      background: var(--blue-bright);
+      opacity: 0.7;
+    }
+    .logo-mark-text {
+      position: absolute; z-index: 2;
+      font-family: var(--heading); font-size: 9px; font-weight: 900;
+      color: var(--white); letter-spacing: 0.5px; pointer-events: none;
+      text-shadow: 0 0 6px rgba(0,0,0,0.8);
+    }
+    @keyframes shurikenSpin { to { transform: rotate(180deg); } }
+    .logo span.site-name { text-shadow: 0 0 20px rgba(0,195,255,0.4); }
+    .nav-links { display: flex; align-items: center; gap: 2.2rem; list-style: none; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none;
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+      transition: color 0.2s, text-shadow 0.2s;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: -4px; left: 0; right: 0; height: 1px;
+      background: var(--blue-bright); transform: scaleX(0); transition: transform 0.25s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--white); text-shadow: 0 0 12px rgba(0,195,255,0.5); }
+    .nav-links a:hover::after { transform: scaleX(1); }
+    .nav-cta {
+      background: transparent !important; color: var(--blue-bright) !important;
+      padding: 8px 22px !important; border: 1px solid var(--blue-bright) !important;
+      font-size: 0.7rem !important; letter-spacing: 2px !important;
+      transition: all 0.25s !important; text-shadow: none !important;
+    }
+    .nav-cta:hover { background: var(--blue-bright) !important; color: var(--bg) !important; box-shadow: 0 0 20px var(--blue-glow) !important; }
+    .nav-cta::after { display: none !important; }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+    .hamburger span { width: 24px; height: 1px; background: var(--blue-bright); border-radius: 1px; transition: 0.3s; }
+
+    /* ══ MOBILE NAV ══ */
+    .mobile-nav {
+      display: none; position: fixed; top: 72px; left: 0; right: 0; bottom: 0;
+      background: rgba(3,6,15,0.97); backdrop-filter: blur(24px);
+      z-index: 999; flex-direction: column; align-items: center; justify-content: center; gap: 2.5rem;
+    }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav a { font-size: 1.3rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--white); text-decoration: none; }
+
+    /* ══ PAGES ══ */
+    .page { display: none; position: relative; z-index: 2; }
+    .page.active { display: block; }
+
+    /* ══ HERO ══ */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 120px 8vw 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero-bg-kanji {
+      position: absolute; right: -2vw; top: 50%;
+      transform: translateY(-50%);
+      font-family: var(--jp); font-size: clamp(160px, 22vw, 340px);
+      color: rgba(26,111,232,0.05); line-height: 1;
+      user-select: none; pointer-events: none;
+      letter-spacing: -10px;
+    }
+    .hero-content { position: relative; max-width: 760px; z-index: 2; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 10px;
+      border: 1px solid rgba(0,195,255,0.3); color: var(--blue-bright);
+      font-family: var(--body); font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      padding: 7px 20px; margin-bottom: 2.5rem;
+      animation: fadeUp 0.7s ease both;
+    }
+    .hero-badge .dot {
+      width: 6px; height: 6px; background: var(--blue-bright); border-radius: 50%;
+      animation: pulse 2.5s ease-in-out infinite;
+      box-shadow: 0 0 8px var(--blue-bright);
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.7)} }
+    .hero h1 {
+      font-family: var(--heading);
+      font-size: clamp(2.8rem, 6vw, 6rem);
+      font-weight: 900; line-height: 1.0; letter-spacing: -1px;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.7s 0.1s ease both;
+    }
+    .hero h1 .blue { color: var(--blue-bright); text-shadow: 0 0 30px rgba(0,195,255,0.5); }
+    .hero h1 .italic { font-style: italic; font-weight: 400; }
+    .hero p {
+      font-size: 1rem; font-weight: 400; color: var(--muted);
+      max-width: 520px; margin-bottom: 3rem; line-height: 1.9;
+      animation: fadeUp 0.7s 0.2s ease both;
+    }
+    .hero-btns { display: flex; gap: 1.2rem; flex-wrap: wrap; animation: fadeUp 0.7s 0.3s ease both; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+
+    /* Animated seal in hero corner */
+    .hero-seal {
+      position: absolute; right: 8vw; top: 50%; transform: translateY(-50%);
+      width: clamp(200px, 28vw, 420px); height: clamp(200px, 28vw, 420px);
+      opacity: 0.12; animation: sealRotate 20s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes sealRotate { to { transform: translateY(-50%) rotate(360deg); } }
+
+    /* ══ BUTTONS ══ */
+    .btn-primary {
+      background: var(--blue);
+      color: var(--white); padding: 15px 44px;
+      font-family: var(--body); font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 2.5px; text-transform: uppercase; text-decoration: none;
+      border: none; cursor: pointer; display: inline-block;
+      clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+      transition: background 0.25s, box-shadow 0.25s, transform 0.15s;
+      position: relative;
+    }
+    .btn-primary:hover {
+      background: var(--blue-light);
+      box-shadow: 0 0 30px rgba(0,195,255,0.4), 0 0 60px rgba(26,111,232,0.2);
+      transform: translateY(-2px);
+    }
+    .btn-secondary {
+      background: transparent; color: var(--white);
+      padding: 15px 44px; font-family: var(--body);
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+      text-decoration: none; border: 1px solid rgba(232,244,255,0.2); cursor: pointer;
+      display: inline-block; transition: border-color 0.25s, color 0.25s, transform 0.15s;
+      clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    }
+    .btn-secondary:hover { border-color: var(--blue-bright); color: var(--blue-bright); transform: translateY(-2px); }
+
+    /* ══ SECTION LAYOUT ══ */
+    .section { padding: 100px 8vw; position: relative; z-index: 2; }
+    .section-tag {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
+      color: var(--blue-bright); margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-tag::before {
+      content: ''; flex: 0 0 32px; height: 1px;
+      background: linear-gradient(to right, var(--blue-bright), transparent);
+    }
+    .section-title {
+      font-family: var(--heading); font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 700; line-height: 1.1; margin-bottom: 1.5rem;
+    }
+    .section-title .accent { color: var(--blue-bright); }
+    .section-sub { color: var(--muted); font-size: 0.95rem; max-width: 560px; line-height: 1.9; margin-bottom: 3rem; }
+    .divider {
+      height: 1px; margin: 0 8vw;
+      background: linear-gradient(90deg, transparent, var(--border2), transparent);
+    }
+
+    /* ══ SERVICES / PACKAGES ══ */
+    .packages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2px; margin-top: 3rem; }
+    .package-card {
+      background: var(--surface); padding: 3rem 2.5rem;
+      border: 1px solid var(--border); position: relative; overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+      cursor: pointer;
+    }
+    .package-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--blue-bright), transparent);
+      transform: scaleX(0); transition: transform 0.4s;
+    }
+    .package-card::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(0,195,255,0.06), transparent 70%);
+      opacity: 0; transition: opacity 0.4s;
+    }
+    .package-card:hover { border-color: var(--blue); transform: translateY(-6px); }
+    .package-card:hover::before { transform: scaleX(1); }
+    .package-card:hover::after { opacity: 1; }
+    .package-card.featured { border-color: var(--blue-dark); background: var(--surface2); }
+    .package-card.featured::before { transform: scaleX(1); background: linear-gradient(90deg, var(--blue), var(--blue-bright)); }
+    .featured-badge {
+      position: absolute; top: 1.5rem; right: 1.5rem;
+      background: var(--blue); color: var(--white);
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      padding: 4px 12px; clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    }
+    .package-rank {
+      font-family: var(--jp); font-size: 3.5rem; color: rgba(26,111,232,0.15);
+      font-weight: 700; line-height: 1; margin-bottom: 0.5rem;
+    }
+    .package-title { font-family: var(--heading); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: 1px; }
+    .package-subtitle { font-size: 0.75rem; font-weight: 600; color: var(--blue-bright); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem; }
+    .package-price {
+      font-family: var(--heading); font-size: 3rem; font-weight: 900; color: var(--white);
+      margin-bottom: 0.25rem; line-height: 1;
+    }
+    .package-price sup { font-size: 1.2rem; vertical-align: super; font-weight: 400; color: var(--muted); }
+    .package-period { font-size: 0.75rem; color: var(--muted); letter-spacing: 1px; margin-bottom: 2rem; }
+    .package-features { list-style: none; margin-bottom: 2.5rem; }
+    .package-features li {
+      padding: 0.55rem 0; font-size: 0.88rem; color: var(--white-muted);
+      border-bottom: 1px solid var(--white-faint);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .package-features li::before {
+      content: ''; flex: 0 0 6px; height: 6px; border-radius: 0;
+      background: var(--blue-bright);
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    }
+    .package-btn {
+      width: 100%; padding: 14px; background: var(--blue-muted);
+      border: 1px solid var(--blue); color: var(--blue-light);
+      font-family: var(--body); font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+      transition: all 0.25s; clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    }
+    .package-btn:hover, .package-btn.active {
+      background: var(--blue); color: var(--white);
+      box-shadow: 0 0 20px rgba(26,111,232,0.4);
+    }
+    .package-btn.active { background: var(--blue-bright); border-color: var(--blue-bright); color: var(--bg); }
+
+    /* ══ CUSTOMIZATION ══ */
+    .custom-section { padding: 100px 8vw; background: var(--surface); position: relative; z-index: 2; }
+    .custom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start; margin-top: 3rem; }
+    @media(max-width:768px){.custom-grid{grid-template-columns:1fr;gap:3rem}}
+    .custom-options { display: flex; flex-direction: column; gap: 1rem; }
+    .custom-option {
+      padding: 1.5rem 2rem; border: 1px solid var(--border);
+      background: var(--surface2);
+      transition: border-color 0.3s, background 0.3s;
+      cursor: pointer; position: relative;
+    }
+    .custom-option:hover { border-color: var(--blue); }
+    .custom-option.selected { border-color: var(--blue-bright); background: rgba(0,195,255,0.05); }
+    .custom-option-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+    .custom-option-name { font-weight: 700; font-size: 0.95rem; letter-spacing: 1px; }
+    .custom-option-check {
+      width: 22px; height: 22px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; color: var(--blue-bright); transition: all 0.2s;
+    }
+    .custom-option.selected .custom-option-check { background: var(--blue-bright); color: var(--bg); border-color: var(--blue-bright); }
+    .custom-option-desc { font-size: 0.82rem; color: var(--muted); }
+    .custom-preview {
+      position: sticky; top: 100px;
+      background: var(--surface3); border: 1px solid var(--border);
+      padding: 2.5rem; min-height: 360px;
+    }
+    .custom-preview-title { font-family: var(--heading); font-size: 1.1rem; font-weight: 700; margin-bottom: 2rem; letter-spacing: 2px; }
+    .preview-line { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px solid var(--white-faint); font-size: 0.88rem; }
+    .preview-line:last-of-type { border-bottom: none; }
+    .preview-total { font-family: var(--heading); font-size: 1.8rem; font-weight: 900; color: var(--blue-bright); margin-top: 1.5rem; }
+    .preview-note { font-size: 0.72rem; color: var(--muted); margin-top: 0.5rem; letter-spacing: 0.5px; }
+
+    /* ══ PROCESS ══ */
+    .process-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0; margin-top: 3rem; }
+    .process-step {
+      padding: 2.5rem 2rem; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      position: relative; overflow: hidden;
+    }
+    .process-step:last-child { border-right: none; }
+    .process-step::before {
+      content: attr(data-num);
+      position: absolute; top: -10px; right: 10px;
+      font-family: var(--heading); font-size: 5rem; font-weight: 900;
+      color: rgba(26,111,232,0.06); line-height: 1; pointer-events: none;
+    }
+    .step-icon { font-size: 1.8rem; margin-bottom: 1rem; }
+    .step-title { font-family: var(--heading); font-size: 1rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 0.75rem; }
+    .step-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.8; }
+
+    /* ══ CHECKOUT ══ */
+    .checkout-wrap { max-width: 820px; margin: 0 auto; }
+    .checkout-header { margin-bottom: 3rem; }
+    .checkout-section-title { font-family: var(--heading); font-size: 0.75rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--blue-bright); margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    @media(max-width:600px){.form-row{grid-template-columns:1fr}}
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
+    .form-group label { font-size: 0.7rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+    .form-group input, .form-group textarea, .form-group select {
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      padding: 12px 16px; font-family: var(--body); font-size: 0.9rem;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+      border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,111,232,0.1);
+    }
+    .form-group textarea { resize: vertical; min-height: 120px; }
+    .stripe-wrap {
+      background: var(--surface2); border: 1px solid var(--border);
+      padding: 14px 16px; min-height: 46px;
+    }
+    #stripe-error { font-size: 0.8rem; color: #ef5350; margin-top: 0.75rem; display: none; }
+    #stripeLoading { font-size: 0.8rem; color: var(--muted); display: block; }
+
+    .cart-summary {
+      background: var(--surface2); border: 1px solid var(--border);
+      padding: 2rem; margin-bottom: 2rem;
+    }
+    .cart-empty { text-align: center; color: var(--muted); font-size: 0.88rem; padding: 2rem 0; }
+    .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 0; border-bottom: 1px solid var(--white-faint); font-size: 0.88rem; }
+    .cart-item:last-child { border-bottom: none; }
+    .cart-item-name { font-weight: 600; }
+    .cart-item-price { color: var(--blue-bright); font-weight: 700; font-family: var(--heading); }
+    .cart-total-line { display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; margin-top: 0.5rem; border-top: 1px solid var(--border2); }
+    .cart-total-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+    .cart-total-amount { font-family: var(--heading); font-size: 2rem; font-weight: 900; color: var(--white); }
+
+    #payBtn {
+      width: 100%; padding: 18px; background: var(--blue);
+      color: var(--white); border: none; font-family: var(--body);
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+      cursor: pointer; transition: all 0.25s; margin-top: 1.5rem;
+      clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+    }
+    #payBtn:hover:not(:disabled) { background: var(--blue-bright); color: var(--bg); box-shadow: 0 0 30px var(--blue-glow); }
+    #payBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    #successScreen {
+      display: none; text-align: center; padding: 4rem 2rem;
+      background: var(--surface2); border: 1px solid var(--border);
+    }
+    .success-seal { font-size: 4rem; margin-bottom: 1.5rem; }
+    .success-title { font-family: var(--heading); font-size: 2rem; font-weight: 900; margin-bottom: 1rem; color: var(--blue-bright); }
+    .success-sub { color: var(--muted); font-size: 0.9rem; }
+
+    /* ══ FOOTER ══ */
+    footer {
+      padding: 4rem 8vw 2rem; background: var(--surface);
+      border-top: 1px solid var(--border); position: relative; z-index: 2;
+    }
+    footer::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--blue-bright), transparent);
+    }
+    .footer-inner { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 2rem; margin-bottom: 3rem; }
+    .footer-brand { max-width: 300px; }
+    .footer-brand .logo { margin-bottom: 1rem; display: inline-flex; }
+    .footer-brand p { font-size: 0.82rem; color: var(--muted); line-height: 1.9; }
+    .footer-links h4 { font-family: var(--heading); font-size: 0.75rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--blue-bright); margin-bottom: 1.2rem; }
+    .footer-links ul { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+    .footer-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; cursor: pointer; }
+    .footer-links a:hover { color: var(--white); }
+    .footer-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+    .footer-bottom p { font-size: 0.72rem; color: var(--muted); letter-spacing: 1px; }
+    .footer-kanji { font-family: var(--jp); font-size: 0.9rem; color: rgba(0,195,255,0.3); letter-spacing: 4px; }
+
+    /* ══ MUSIC PLAYER ══ */
+    #music-player {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9990;
+      background: rgba(6,13,26,0.92); backdrop-filter: blur(20px);
+      border: 1px solid var(--border); transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
+      display: flex; align-items: center; overflow: hidden;
+      min-width: 52px; height: 52px;
+    }
+    #music-player::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--blue-bright), transparent);
+    }
+    #music-player.expanded { min-width: 280px; }
+    #music-player.playing { border-color: rgba(0,195,255,0.4); }
+    #music-toggle {
+      width: 52px; height: 52px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; transition: background 0.2s;
+    }
+    #music-toggle:hover { background: var(--blue-muted); }
+    .music-icon { font-size: 1rem; color: var(--blue-bright); }
+    #music-player.playing .music-icon { animation: iconPulse 1.5s ease-in-out infinite; }
+    @keyframes iconPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .music-info {
+      padding: 0 1rem 0 0.5rem; overflow: hidden; flex: 1;
+      opacity: 0; transition: opacity 0.3s; white-space: nowrap;
+    }
+    #music-player.expanded .music-info { opacity: 1; }
+    .music-title { font-size: 0.75rem; font-weight: 600; color: var(--white); overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+    .music-status { font-size: 0.62rem; color: var(--blue-bright); letter-spacing: 1px; text-transform: uppercase; }
+    .music-controls { display: flex; gap: 4px; padding-right: 8px; opacity: 0; transition: opacity 0.3s; }
+    #music-player.expanded .music-controls { opacity: 1; }
+    .music-btn {
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 0.7rem; color: var(--muted); transition: color 0.2s;
+    }
+    .music-btn:hover { color: var(--blue-bright); }
+    .music-bars { display: flex; align-items: flex-end; gap: 2px; height: 16px; padding: 0 6px; }
+    .music-bar {
+      width: 3px; background: var(--blue-bright); border-radius: 1px;
+      animation: barBounce 0.8s ease-in-out infinite;
+    }
+    .music-bar:nth-child(2) { animation-delay: 0.15s; }
+    .music-bar:nth-child(3) { animation-delay: 0.3s; }
+    #music-player:not(.playing) .music-bar { animation: none; height: 4px !important; }
+    @keyframes barBounce { 0%,100%{height:4px} 50%{height:14px} }
+
+    /* ══ TOAST ══ */
+    #toast {
+      position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--surface3); border: 1px solid var(--border);
+      padding: 12px 24px; font-size: 0.8rem; color: var(--white);
+      z-index: 9999; opacity: 0; transition: all 0.3s; pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ══ SCROLLBAR ══ */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--blue-dark); }
+
+    @media(max-width:768px){
+      .hero{padding:100px 6vw 60px}
+      .section{padding:70px 6vw}
+      .hero-seal{display:none}
+      .nav-links{display:none}
+      .hamburger{display:flex}
+      .packages-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+<div id="cursor-glow"></div>
+
+<!-- ══ NAV ══ -->
+<nav>
+  <a class="logo" onclick="showPage('home')">
+    <div class="logo-mark">
+      <span class="logo-mark-text">JS</span>
+    </div>
+    <span class="site-name">JOSESITES</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#" onclick="showPage('home');return false;" class="active" id="nav-home">Home</a></li>
+    <li><a href="#" onclick="showPage('services');return false;" id="nav-services">Services</a></li>
+    <li><a href="#" onclick="showPage('process');return false;" id="nav-process">How It Works</a></li>
+    <li><a href="#" onclick="showPage('checkout');return false;" class="nav-cta" id="nav-checkout">Order Now</a></li>
+  </ul>
+  <div class="hamburger" id="hamburgerBtn" onclick="toggleMobileNav()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- ══ MOBILE NAV ══ -->
+<div class="mobile-nav" id="mobileNav">
+  <a onclick="showPage('home');toggleMobileNav()">Home</a>
+  <a onclick="showPage('services');toggleMobileNav()">Services</a>
+  <a onclick="showPage('process');toggleMobileNav()">How It Works</a>
+  <a onclick="showPage('checkout');toggleMobileNav()">Order Now</a>
+</div>
+
+<!-- ══ HOME PAGE ══ -->
+<div class="page active" id="page-home">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg-kanji">忍術</div>
+
+    <!-- Animated seal SVG -->
+    <svg class="hero-seal" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="200" cy="200" r="190" fill="none" stroke="#1a6fe8" stroke-width="1" stroke-dasharray="12 6" opacity="0.6"/>
+      <circle cx="200" cy="200" r="160" fill="none" stroke="#00c3ff" stroke-width="0.5" opacity="0.4"/>
+      <polygon points="200,30 350,115 350,285 200,370 50,285 50,115" fill="none" stroke="#1a6fe8" stroke-width="1" opacity="0.5"/>
+      <polygon points="200,70 320,135 320,265 200,330 80,265 80,135" fill="none" stroke="#00c3ff" stroke-width="0.5" opacity="0.3"/>
+      <text x="200" y="215" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="80" font-weight="700" fill="#1a6fe8" opacity="0.5">忍</text>
+    </svg>
+
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        Custom Web Jutsu — Accepting Missions
+      </div>
+      <h1>
+        Forge Your<br>
+        <span class="blue italic">Digital Presence</span><br>
+        With Precision
+      </h1>
+      <p>
+        Hand-crafted websites built with the discipline of a shinobi.
+        Fast, modern, and tailored to your mission — delivered without compromise.
+      </p>
+      <div class="hero-btns">
+        <button class="btn-primary" onclick="showPage('services')">View Packages</button>
+        <button class="btn-secondary" onclick="showPage('process')">How It Works</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- QUICK STATS -->
+  <section class="section">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:2px">
+      <div class="reveal d1" style="padding:2.5rem 2rem;background:var(--surface);border:1px solid var(--border);text-align:center">
+        <div style="font-family:var(--heading);font-size:3rem;font-weight:900;color:var(--blue-bright);text-shadow:0 0 20px rgba(0,195,255,0.4)">100%</div>
+        <div style="font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:0.5rem">Custom Built</div>
+      </div>
+      <div class="reveal d2" style="padding:2.5rem 2rem;background:var(--surface);border:1px solid var(--border);text-align:center">
+        <div style="font-family:var(--heading);font-size:3rem;font-weight:900;color:var(--blue-bright);text-shadow:0 0 20px rgba(0,195,255,0.4)">7d</div>
+        <div style="font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:0.5rem">Avg Delivery</div>
+      </div>
+      <div class="reveal d3" style="padding:2.5rem 2rem;background:var(--surface);border:1px solid var(--border);text-align:center">
+        <div style="font-family:var(--heading);font-size:3rem;font-weight:900;color:var(--blue-bright);text-shadow:0 0 20px rgba(0,195,255,0.4)">∞</div>
+        <div style="font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:0.5rem">Revisions</div>
+      </div>
+      <div class="reveal d4" style="padding:2.5rem 2rem;background:var(--surface);border:1px solid var(--border);text-align:center">
+        <div style="font-family:var(--heading);font-size:3rem;font-weight:900;color:var(--blue-bright);text-shadow:0 0 20px rgba(0,195,255,0.4)">24/7</div>
+        <div style="font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:0.5rem">Support</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- QUICK SERVICES PREVIEW -->
+  <section class="section">
+    <div class="section-tag reveal">Services</div>
+    <h2 class="section-title reveal d1">Choose Your <span class="accent">Jutsu</span></h2>
+    <p class="section-sub reveal d2">Seven tiers of web craftsmanship — each forged to match your ambitions and budget.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2px;margin-top:2rem">
+      <div class="reveal d1" style="padding:2.5rem;background:var(--surface);border:1px solid var(--border);cursor:pointer" onclick="showPage('services')">
+        <div style="font-family:var(--jp);font-size:2.5rem;color:rgba(26,111,232,0.25);font-weight:700;margin-bottom:0.5rem">一</div>
+        <div style="font-family:var(--heading);font-size:1.1rem;font-weight:700;margin-bottom:0.5rem">Starter Site</div>
+        <div style="color:var(--blue-bright);font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem">$100 one-time</div>
+        <div style="font-size:0.85rem;color:var(--muted)">Clean, minimal web presence. Perfect for getting online fast with a professional look.</div>
+      </div>
+      <div class="reveal d2" style="padding:2.5rem;background:var(--surface2);border:1px solid var(--blue-dark);cursor:pointer;position:relative" onclick="showPage('services')">
+        <div style="position:absolute;top:1rem;right:1rem;background:var(--blue);color:var(--white);font-size:0.6rem;font-weight:700;letter-spacing:2px;padding:3px 10px">POPULAR</div>
+        <div style="font-family:var(--jp);font-size:2.5rem;color:rgba(26,111,232,0.3);font-weight:700;margin-bottom:0.5rem">三</div>
+        <div style="font-family:var(--heading);font-size:1.1rem;font-weight:700;margin-bottom:0.5rem">Business Site</div>
+        <div style="color:var(--blue-bright);font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem">$300 one-time</div>
+        <div style="font-size:0.85rem;color:var(--muted)">Multi-page power. Full brand presence with custom sections and SEO.</div>
+      </div>
+      <div class="reveal d3" style="padding:2.5rem;background:var(--surface);border:1px solid var(--border);cursor:pointer" onclick="showPage('services')">
+        <div style="font-family:var(--jp);font-size:2.5rem;color:rgba(26,111,232,0.25);font-weight:700;margin-bottom:0.5rem">五</div>
+        <div style="font-family:var(--heading);font-size:1.1rem;font-weight:700;margin-bottom:0.5rem">E-Commerce</div>
+        <div style="color:var(--blue-bright);font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem">$500 one-time</div>
+        <div style="font-size:0.85rem;color:var(--muted)">Full store with Stripe payments, product catalog, and custom checkout.</div>
+      </div>
+    </div>
+    <div style="margin-top:2.5rem;text-align:center">
+      <button class="btn-primary reveal" onclick="showPage('checkout')">Start Your Mission</button>
+    </div>
+  </section>
+
+</div><!-- /page-home -->
+
+
+<!-- ══ SERVICES PAGE ══ -->
+<div class="page" id="page-services">
+  <section class="section" style="padding-top:120px">
+    <div class="section-tag reveal">Packages</div>
+    <h2 class="section-title reveal d1">Select Your <span class="accent">Rank</span></h2>
+    <p class="section-sub reveal d2">
+      Every site is hand-crafted, mobile-first, and deployed to production.
+      Add-ons can be stacked for the ultimate mission loadout.
+    </p>
+
+    <div class="packages-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+
+      <!-- STARTER $100 -->
+      <div class="package-card reveal d1" id="card-starter">
+        <div class="package-rank">一</div>
+        <div class="package-title">Starter Site</div>
+        <div class="package-subtitle">Genin Rank</div>
+        <div class="package-price"><sup>$</sup>100</div>
+        <div class="package-period">one-time payment</div>
+        <ul class="package-features">
+          <li>Single-page site</li>
+          <li>Hero + About + Contact sections</li>
+          <li>Mobile responsive</li>
+          <li>Basic contact form</li>
+          <li>Deployed to Vercel</li>
+          <li>1 revision round</li>
+        </ul>
+        <button class="package-btn" onclick="addToCart('starter','Starter Site','one_time',10000)" id="btn-starter">Add to Mission</button>
+      </div>
+
+      <!-- LANDING $200 -->
+      <div class="package-card reveal d2" id="card-landing">
+        <div class="package-rank">二</div>
+        <div class="package-title">Landing Page</div>
+        <div class="package-subtitle">Chūnin Rank I</div>
+        <div class="package-price"><sup>$</sup>200</div>
+        <div class="package-period">one-time payment</div>
+        <ul class="package-features">
+          <li>Single conversion-focused page</li>
+          <li>Hero, Services, Testimonials, CTA</li>
+          <li>Mobile responsive</li>
+          <li>Contact form + email integration</li>
+          <li>Basic SEO setup</li>
+          <li>Deployed to Vercel</li>
+          <li>2 revision rounds</li>
+        </ul>
+        <button class="package-btn" onclick="addToCart('landing','Landing Page','one_time',20000)" id="btn-landing">Add to Mission</button>
+      </div>
+
+      <!-- BUSINESS $300 — FEATURED -->
+      <div class="package-card featured reveal d3" id="card-business">
+        <div class="featured-badge">Popular</div>
+        <div class="package-rank">三</div>
+        <div class="package-title">Business Site</div>
+        <div class="package-subtitle">Chūnin Rank II</div>
+        <div class="package-price"><sup>$</sup>300</div>
+        <div class="package-period">one-time payment</div>
+        <ul class="package-features">
+          <li>Up to 4 pages</li>
+          <li>Custom design & branding</li>
+          <li>Blog or portfolio section</li>
+          <li>Contact form + email integration</li>
+          <li>Full SEO optimization</li>
+          <li>Google Analytics setup</li>
+          <li>Deployed to Vercel</li>
+          <li>3 revision rounds</li>
+        </ul>
+        <button class="package-btn" onclick="addToCart('business','Business Site','one_time',30000)" id="btn-business">Add to Mission</button>
+      </div>
+
+      <!-- PREMIUM $400 -->
+      <div class="package-card reveal d4" id="card-premium">
+        <div class="package-rank">四</div>
+        <div class="package-title">Premium Business</div>
+        <div class="package-subtitle">Jōnin Rank I</div>
+        <div class="package-price"><sup>$</sup>400</div>
+        <div class="package-period">one-time payment</div>
+        <ul class="package-features">
+          <li>Up to 7 pages</li>
+          <li>Advanced custom design</li>
+          <li>Animations & micro-interactions</li>
+          <li>CMS integration (Notion / Sanity)</li>
+          <li>Full SEO + sitemap</li>
+          <li>Performance optimized</li>
+          <li>Deployed to Vercel</li>
+          <li>Unlimited revisions</li>
+        </ul>
+        <button class="package-btn" onclick="addToCart('premium','Premium Business','one_time',40000)" id="btn-premium">Add to Mission</button>
+      </div>
+
+      <!-- ECOMMERCE $500 -->
+      <div class="package-card reveal d5" id="card-ecommerce">
+        <div class="package-rank">五</div>
+        <div class="package-title">E-Commerce</div>
+        <div class="package-subtitle">Jōnin Rank II</div>
+        <div class="package-price"><sup>$</sup>500</div>
+        <div class="package-period">one-time payment</div>
+        <ul class="package-features">
+          <li>Full product catalog</li>
+          <li>Stripe payments built in</li>
+          <li>Cart & checkout flow</li>
+          <li>Inventory management</li>
+          <li>Customer accounts</li>
+          <li>Order confirmation emails</li>
+          <li>Deployed to Vercel</li>
+          <li>Unlimited revisions</li>
+        </ul>
+        <button class="package-btn" onclick="addToCart('ecommerce','E-Commerce Site','one_time',50000)" id="btn-ecommerce">Add to Mission</button>
+      </div>
+
+    </div>
+
+    <!-- ADD-ONS -->
+    <div style="margin-top:4rem">
+      <div class="section-tag reveal">Add-Ons</div>
+      <h3 class="section-title reveal d1" style="font-size:1.8rem">Power <span class="accent">Ups</span></h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:2px;margin-top:1.5rem">
+        <div class="custom-option reveal d1" id="addcard-maintenance" onclick="toggleAddon('maintenance','Monthly Maintenance','recurring',1500,'addcard-maintenance','btn-maintenance')">
+          <div class="custom-option-header">
+            <span class="custom-option-name">Monthly Maintenance</span>
+            <div class="custom-option-check" id="check-maintenance">✓</div>
+          </div>
+          <div class="custom-option-desc" style="margin-bottom:0.75rem">Ongoing updates, security patches, uptime monitoring, and priority support. $15/mo — first month free. Cancel anytime.</div>
+          <button class="package-btn" id="btn-maintenance" style="width:100%" onclick="event.stopPropagation();toggleAddon('maintenance','Monthly Maintenance','recurring',1500,'addcard-maintenance','btn-maintenance')">Add to Mission</button>
+        </div>
+        <div class="custom-option reveal d2" id="addcard-logo" onclick="toggleAddon('logo','Logo Design','one_time',5000,'addcard-logo','btn-logo')">
+          <div class="custom-option-header">
+            <span class="custom-option-name">Logo Design</span>
+            <div class="custom-option-check" id="check-logo">✓</div>
+          </div>
+          <div class="custom-option-desc" style="margin-bottom:0.75rem">Custom logo crafted from scratch — 3 initial concepts, unlimited revision rounds, delivered in SVG, PNG, and PDF. $50 one-time.</div>
+          <button class="package-btn" id="btn-logo" style="width:100%" onclick="event.stopPropagation();toggleAddon('logo','Logo Design','one_time',5000,'addcard-logo','btn-logo')">Add to Mission</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:3rem;text-align:center">
+      <button class="btn-primary reveal" onclick="showPage('checkout')">Proceed to Checkout</button>
+    </div>
+  </section>
+</div><!-- /page-services -->
+
+
+<!-- ══ PROCESS PAGE ══ -->
+<div class="page" id="page-process">
+  <section class="section" style="padding-top:120px">
+    <div class="section-tag reveal">How It Works</div>
+    <h2 class="section-title reveal d1">The <span class="accent">Mission</span> Briefing</h2>
+    <p class="section-sub reveal d2">From order to deployment — here's exactly how your project flows.</p>
+
+    <div class="process-grid reveal d1">
+      <div class="process-step" data-num="01">
+        <div class="step-icon">📋</div>
+        <div class="step-title">Choose & Customize</div>
+        <div class="step-desc">Select your package and add-ons. Fill out the project brief with your brand, colors, goals, and content direction.</div>
+      </div>
+      <div class="process-step" data-num="02">
+        <div class="step-icon">⚡</div>
+        <div class="step-title">Secure Payment</div>
+        <div class="step-desc">Pay securely through Stripe. One-time packages are charged immediately. Maintenance plans start after the first free month.</div>
+      </div>
+      <div class="process-step" data-num="03">
+        <div class="step-icon">🔨</div>
+        <div class="step-title">Design & Build</div>
+        <div class="step-desc">I build your site from scratch — no templates. Clean code, fast load times, and a design that fits your mission.</div>
+      </div>
+      <div class="process-step" data-num="04">
+        <div class="step-icon">🔄</div>
+        <div class="step-title">Revisions</div>
+        <div class="step-desc">You review and request changes. Higher tiers get unlimited rounds — nothing ships until you're fully satisfied.</div>
+      </div>
+      <div class="process-step" data-num="05">
+        <div class="step-icon">🚀</div>
+        <div class="step-title">Launch</div>
+        <div class="step-desc">Your site goes live on Vercel with your custom domain. I handle DNS setup, SSL, and deployment configuration.</div>
+      </div>
+      <div class="process-step" data-num="06">
+        <div class="step-icon">🛡️</div>
+        <div class="step-title">Support</div>
+        <div class="step-desc">Post-launch support included. Maintenance subscribers get ongoing updates, backups, and priority response.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:4rem;padding:3rem;background:var(--surface);border:1px solid var(--border);text-align:center" class="reveal">
+      <div style="font-family:var(--jp);font-size:1.5rem;color:var(--blue-bright);letter-spacing:4px;margin-bottom:1rem">準備完了</div>
+      <div style="font-family:var(--heading);font-size:2rem;font-weight:700;margin-bottom:1rem">Ready to Begin Your Mission?</div>
+      <div style="color:var(--muted);max-width:500px;margin:0 auto 2rem;font-size:0.9rem">
+        Every great shinobi starts with a mission briefing. Let's craft yours.
+      </div>
+      <button class="btn-primary" onclick="showPage('checkout')">Start Now</button>
+    </div>
+  </section>
+</div><!-- /page-process -->
+
+
+<!-- ══ CHECKOUT PAGE ══ -->
+<div class="page" id="page-checkout">
+  <section class="section" style="padding-top:120px">
+    <div class="checkout-wrap">
+      <div class="checkout-header">
+        <div class="section-tag reveal">Mission Briefing</div>
+        <h2 class="section-title reveal d1">Complete Your <span class="accent">Order</span></h2>
+        <p style="color:var(--muted);font-size:0.9rem" class="reveal d2">Secure checkout powered by Stripe. Your mission begins within 24 hours of payment.</p>
+      </div>
+
+      <div id="paymentForm">
+        <!-- CART SUMMARY -->
+        <div class="checkout-section-title">Your Cart</div>
+        <div class="cart-summary" id="cartSummary">
+          <div class="cart-empty" id="cartEmpty">No services selected yet. <a href="#" onclick="showPage('services');return false;" style="color:var(--blue-bright)">Browse packages →</a></div>
+          <div id="cartItems"></div>
+          <div class="cart-total-line" id="cartTotalLine" style="display:none">
+            <span class="cart-total-label">Mission Total</span>
+            <span class="cart-total-amount" id="cartTotal">$0</span>
+          </div>
+        </div>
+
+        <!-- PROJECT BRIEF -->
+        <div class="checkout-section-title" style="margin-top:2.5rem">Project Brief</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>First Name *</label>
+            <input type="text" id="firstName" placeholder="Naruto" autocomplete="given-name"/>
+          </div>
+          <div class="form-group">
+            <label>Last Name *</label>
+            <input type="text" id="lastName" placeholder="Uzumaki" autocomplete="family-name"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" id="email" placeholder="you@hidden-leaf.com" autocomplete="email"/>
+        </div>
+        <div class="form-group">
+          <label>Business / Site Name</label>
+          <input type="text" id="businessName" placeholder="Your brand or project name"/>
+        </div>
+        <div class="form-group">
+          <label>Website Goals & Notes</label>
+          <textarea id="projectNotes" placeholder="Tell me about your project: what you sell, your target audience, style preferences, must-have features, etc."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Color Scheme Preference</label>
+          <input type="text" id="colorPref" placeholder="e.g. dark blue + white, minimalist, bold..."/>
+        </div>
+
+        <!-- PAYMENT -->
+        <div class="checkout-section-title" style="margin-top:2.5rem">Payment</div>
+        <div class="form-group">
+          <label>Name on Card *</label>
+          <input type="text" id="cardName" placeholder="Full name as it appears on card" autocomplete="cc-name"/>
+        </div>
+        <div class="form-group">
+          <label>Card Details *</label>
+          <div class="stripe-wrap">
+            <div id="stripeLoading">Loading secure payment form...</div>
+            <div id="stripe-card-element" style="display:none"></div>
+          </div>
+          <div id="stripe-error"></div>
+        </div>
+
+        <div style="padding:1.2rem;background:var(--surface2);border:1px solid var(--border);font-size:0.75rem;color:var(--muted);margin-top:1rem;display:flex;align-items:center;gap:1rem">
+          <span style="color:var(--blue-bright);font-size:1.1rem">🔒</span>
+          <span>Payments secured by Stripe. Your card details are encrypted and never stored on our servers. Maintenance plans include a 30-day free trial before billing begins.</span>
+        </div>
+
+        <button id="payBtn" onclick="processStripePayment()">Complete Mission</button>
+      </div>
+
+      <!-- SUCCESS -->
+      <div id="successScreen">
+        <div class="success-seal">⚡</div>
+        <div class="success-title">Mission Accepted!</div>
+        <p class="success-sub">Your payment was successful. You'll receive a confirmation email shortly, and I'll reach out within 24 hours to begin your project briefing.</p>
+        <div style="margin-top:1.5rem;font-family:var(--jp);font-size:1.2rem;color:var(--blue-bright);letter-spacing:4px">任務開始</div>
+      </div>
+    </div>
+  </section>
+</div><!-- /page-checkout -->
+
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a class="logo" onclick="showPage('home')" style="margin-bottom:1rem;display:inline-flex">
+        <div class="logo-mark">
+          <span class="logo-mark-text">JS</span>
+        </div>
+        <span class="site-name">JOSESITES</span>
+      </a>
+      <p>Custom websites crafted with the discipline and precision of a true shinobi. Every project is a mission I take personally.</p>
+    </div>
+    <div class="footer-links">
+      <h4>Navigate</h4>
+      <ul>
+        <li><a onclick="showPage('home')">Home</a></li>
+        <li><a onclick="showPage('services')">Services</a></li>
+        <li><a onclick="showPage('process')">How It Works</a></li>
+        <li><a onclick="showPage('checkout')">Order Now</a></li>
+      </ul>
+    </div>
+    <div class="footer-links">
+      <h4>Services</h4>
+      <ul>
+        <li><a onclick="showPage('services')">Landing Pages</a></li>
+        <li><a onclick="showPage('services')">Business Sites</a></li>
+        <li><a onclick="showPage('services')">E-Commerce</a></li>
+        <li><a onclick="showPage('services')">AI Chatbots</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 JoseSites. All rights reserved.</p>
+    <div class="footer-kanji">忍 · 力 · 速</div>
+  </div>
+</footer>
+
+<!-- ══ MUSIC PLAYER ══ -->
+<div id="music-player">
+  <div id="music-toggle">
+    <span class="music-icon">♪</span>
+  </div>
+  <div class="music-bars">
+    <div class="music-bar" style="height:4px"></div>
+    <div class="music-bar" style="height:4px"></div>
+    <div class="music-bar" style="height:4px"></div>
+  </div>
+  <div class="music-info">
+    <div class="music-title" id="music-title">Loading...</div>
+    <div class="music-status" id="music-status">Now Playing</div>
+  </div>
+  <div class="music-controls">
+    <div class="music-btn" onclick="musicPrev()" title="Previous">⏮</div>
+    <div class="music-btn" onclick="musicNext()" title="Next">⏭</div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div id="toast"><span id="toast-msg"></span></div>
+
+<script>
+  // ══ CURSOR GLOW ══
+  const glow = document.getElementById('cursor-glow');
+  document.addEventListener('mousemove', e => {
+    glow.style.left = e.clientX + 'px';
+    glow.style.top = e.clientY + 'px';
+  });
+
+  // ══ PAGE NAVIGATION ══
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    const navEl = document.getElementById('nav-' + id);
+    if (navEl) navEl.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(initReveal, 100);
+    if (id === 'checkout') renderCart();
+  }
+
+  function toggleMobileNav() {
+    document.getElementById('mobileNav').classList.toggle('open');
+  }
+
+  // ══ SCROLL REVEAL ══
+  function initReveal() {
+    const els = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    els.forEach(el => { el.classList.remove('visible'); io.observe(el); });
+  }
+  window.addEventListener('load', () => { initReveal(); setTimeout(initStripe, 600); });
+
+  // ══ CART ══
+  let cart = {};
+  const CATALOG = {
+    starter:     { name: 'Starter Site',        type: 'one_time',  amount: 10000 },
+    landing:     { name: 'Landing Page',         type: 'one_time',  amount: 20000 },
+    business:    { name: 'Business Site',        type: 'one_time',  amount: 30000 },
+    premium:     { name: 'Premium Business',     type: 'one_time',  amount: 40000 },
+    ecommerce:   { name: 'E-Commerce Site',      type: 'one_time',  amount: 50000 },
+    maintenance: { name: 'Monthly Maintenance',  type: 'recurring', amount: 1500  },
+    logo:        { name: 'Logo Design',          type: 'one_time',  amount: 5000  },
+  };
+
+  function addToCart(id, name, type, amount) {
+    // Only one base package at a time
+    if (['starter','landing','business','premium','ecommerce'].includes(id)) {
+      ['starter','landing','business','premium','ecommerce'].forEach(k => {
+        if (k !== id && cart[k]) {
+          delete cart[k];
+          const b = document.getElementById('btn-' + k);
+          if (b) { b.textContent = 'Add to Mission'; b.classList.remove('active'); }
+        }
+      });
+    }
+    if (cart[id]) {
+      delete cart[id];
+      const btn = document.getElementById('btn-' + id);
+      if (btn) { btn.textContent = 'Add to Mission'; btn.classList.remove('active'); }
+      showToast('Removed: ' + name);
+    } else {
+      cart[id] = { name, type, amount };
+      const btn = document.getElementById('btn-' + id);
+      if (btn) { btn.textContent = '✓ Added'; btn.classList.add('active'); }
+      showToast('Added: ' + name);
+    }
+    renderCart();
+  }
+
+  function toggleAddon(id, name, type, amount, cardId, btnId) {
+    const card = document.getElementById(cardId);
+    const check = document.getElementById('check-' + id);
+    if (cart[id]) {
+      delete cart[id];
+      const btn = document.getElementById(btnId);
+      if (btn) { btn.textContent = 'Add to Mission'; btn.classList.remove('active'); }
+      if (card) card.classList.remove('selected');
+      showToast('Removed: ' + name);
+    } else {
+      cart[id] = { name, type, amount };
+      const btn = document.getElementById(btnId);
+      if (btn) { btn.textContent = '✓ Added'; btn.classList.add('active'); }
+      if (card) card.classList.add('selected');
+      showToast('Added: ' + name);
+    }
+    renderCart();
+  }
+
+  function renderCart() {
+    const keys = Object.keys(cart);
+    const empty = document.getElementById('cartEmpty');
+    const items = document.getElementById('cartItems');
+    const totalLine = document.getElementById('cartTotalLine');
+    const totalEl = document.getElementById('cartTotal');
+    const payBtn = document.getElementById('payBtn');
+
+    if (!items) return;
+
+    if (keys.length === 0) {
+      empty.style.display = 'block';
+      items.innerHTML = '';
+      totalLine.style.display = 'none';
+      if (payBtn) { payBtn.disabled = true; payBtn.textContent = 'Select a Service First'; }
+      return;
+    }
+    empty.style.display = 'none';
+    let total = 0;
+    items.innerHTML = keys.map(id => {
+      const item = cart[id];
+      total += item.amount;
+      const priceStr = item.type === 'recurring'
+        ? '$' + (item.amount/100).toFixed(0) + '/mo'
+        : '$' + (item.amount/100).toFixed(0);
+      return `<div class="cart-item"><span class="cart-item-name">${item.name}</span><span class="cart-item-price">${priceStr}</span></div>`;
+    }).join('');
+    totalLine.style.display = 'flex';
+    totalEl.textContent = '$' + (total/100).toFixed(0);
+    if (payBtn) {
+      payBtn.disabled = false;
+      payBtn.textContent = 'Complete Mission — $' + (total/100).toFixed(0);
+    }
+  }
+
+  // ══ STRIPE ══
+  let stripe, stripeElements, stripeCardElement, stripeCardComplete = false;
+
+  async function initStripe() {
+    try {
+      stripe = Stripe('YOUR_STRIPE_PUBLISHABLE_KEY'); // ← Replace with your key
+      stripeElements = stripe.elements({
+        appearance: {
+          theme: 'night',
+          variables: {
+            colorPrimary: '#1a6fe8',
+            colorBackground: '#0a1528',
+            colorText: '#e8f4ff',
+            colorDanger: '#ef5350',
+            fontFamily: 'Rajdhani, sans-serif',
+            borderRadius: '0px',
+          },
+        },
+      });
+      stripeCardElement = stripeElements.create('card', {
+        style: {
+          base: {
+            color: '#e8f4ff',
+            fontFamily: 'Rajdhani, sans-serif',
+            fontSmoothing: 'antialiased',
+            fontSize: '15px',
+            '::placeholder': { color: 'rgba(232,244,255,0.3)' },
+          },
+          invalid: { color: '#ef5350' },
+        }
+      });
+      document.getElementById('stripeLoading').style.display = 'none';
+      document.getElementById('stripe-card-element').style.display = 'block';
+      stripeCardElement.mount('#stripe-card-element');
+      stripeCardElement.on('change', e => {
+        stripeCardComplete = e.complete;
+        const errorEl = document.getElementById('stripe-error');
+        if (e.error) { errorEl.textContent = e.error.message; errorEl.style.display = 'block'; }
+        else { errorEl.style.display = 'none'; }
+        renderCart();
+      });
+    } catch (err) {
+      console.error('Stripe init error:', err);
+      document.getElementById('stripeLoading').textContent = 'Payment form unavailable. Please refresh.';
+    }
+  }
+
+  async function processStripePayment() {
+    if (Object.keys(cart).length === 0) { showToast('Please add at least one service first.'); return; }
+    const required = ['firstName','lastName','email','cardName'];
+    for (const id of required) {
+      const el = document.getElementById(id);
+      if (!el || !el.value.trim()) {
+        if (el) { el.focus(); el.style.borderColor = '#ef5350'; setTimeout(() => el.style.borderColor = '', 2500); }
+        showToast('⚠ Please fill in all required fields.');
+        return;
+      }
+    }
+    if (!stripe || !stripeCardElement) { showToast('⚠ Payment system not loaded. Please refresh.'); return; }
+
+    const btn = document.getElementById('payBtn');
+    btn.disabled = true; btn.textContent = 'Processing mission...';
+
+    try {
+      const res = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: Object.keys(cart),
+          email: document.getElementById('email').value.trim(),
+          name: document.getElementById('firstName').value.trim() + ' ' + document.getElementById('lastName').value.trim(),
+        }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Server error. Please try again.');
+      }
+      const { paymentIntentClientSecret, subscriptionClientSecret } = await res.json();
+      const billingDetails = {
+        name: document.getElementById('cardName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+      };
+
+      if (paymentIntentClientSecret) {
+        const { error: piError, paymentIntent } = await stripe.confirmCardPayment(
+          paymentIntentClientSecret,
+          { payment_method: { card: stripeCardElement, billing_details: billingDetails } }
+        );
+        if (piError) {
+          document.getElementById('stripe-error').textContent = piError.message;
+          document.getElementById('stripe-error').style.display = 'block';
+          btn.disabled = false; renderCart(); return;
+        }
+        if (paymentIntent.status !== 'succeeded') throw new Error('Payment did not complete.');
+      }
+      if (subscriptionClientSecret) {
+        const { error: subError } = await stripe.confirmCardPayment(
+          subscriptionClientSecret,
+          { payment_method: { card: stripeCardElement, billing_details: billingDetails } }
+        );
+        if (subError) {
+          document.getElementById('stripe-error').textContent = subError.message;
+          document.getElementById('stripe-error').style.display = 'block';
+          btn.disabled = false; renderCart(); return;
+        }
+      }
+      document.getElementById('paymentForm').style.display = 'none';
+      document.getElementById('successScreen').style.display = 'block';
+      cart = {};
+    } catch (err) {
+      console.error('Payment error:', err);
+      document.getElementById('stripe-error').textContent = err.message || 'Payment failed. Please try again.';
+      document.getElementById('stripe-error').style.display = 'block';
+      btn.disabled = false; renderCart();
+    }
+  }
+
+  // ══ TOAST ══
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+  }
+
+  // ══ MUSIC PLAYER ══
+  // Reads from /music/playlist.json — see README for setup
+  (function() {
+    let playlist = [];
+    let currentIndex = 0;
+    let audio = new Audio();
+    let playing = false;
+    let expandTimer;
+
+    const player = document.getElementById('music-player');
+    const toggle = document.getElementById('music-toggle');
+    const icon = toggle.querySelector('.music-icon');
+    const titleEl = document.getElementById('music-title');
+    const statusEl = document.getElementById('music-status');
+
+    function formatTitle(filename) {
+      // Remove extension, replace dashes/underscores with spaces, title-case
+      return filename
+        .replace(/\.[^.]+$/, '')
+        .replace(/[-_]/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function loadTrack(index) {
+      if (!playlist.length) return;
+      const file = playlist[index];
+      audio.src = '/music/' + file;
+      titleEl.textContent = formatTitle(file);
+      audio.load();
+      if (playing) audio.play().catch(() => {});
+    }
+
+    function setPlaying(state) {
+      playing = state;
+      icon.textContent = playing ? '⏸' : '♪';
+      player.classList.toggle('playing', playing);
+      statusEl.textContent = playing ? 'Now Playing' : 'Paused';
+    }
+
+    audio.addEventListener('ended', () => {
+      currentIndex = (currentIndex + 1) % playlist.length;
+      loadTrack(currentIndex);
+      audio.play().catch(() => {});
+    });
+
+    window.musicNext = function() {
+      currentIndex = (currentIndex + 1) % playlist.length;
+      loadTrack(currentIndex);
+      if (playing) audio.play().catch(() => {});
+    };
+
+    window.musicPrev = function() {
+      currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+      loadTrack(currentIndex);
+      if (playing) audio.play().catch(() => {});
+    };
+
+    // Expand on hover
+    player.addEventListener('mouseenter', () => {
+      clearTimeout(expandTimer);
+      player.classList.add('expanded');
+    });
+    player.addEventListener('mouseleave', () => {
+      expandTimer = setTimeout(() => player.classList.remove('expanded'), 1200);
+    });
+
+    // Toggle play/pause
+    toggle.addEventListener('click', () => {
+      if (!playlist.length) return;
+      if (playing) {
+        audio.pause();
+        setPlaying(false);
+      } else {
+        audio.play().then(() => setPlaying(true)).catch(() => {});
+      }
+    });
+
+    // Load playlist from JSON
+    fetch('/music/playlist.json')
+      .then(r => r.json())
+      .then(data => {
+        playlist = data.tracks || data;
+        if (playlist.length) {
+          loadTrack(0);
+          // Try autoplay on first user interaction
+          function tryAutoplay() {
+            audio.play().then(() => {
+              setPlaying(true);
+              ['click','keydown','scroll'].forEach(e => document.removeEventListener(e, tryAutoplay));
+            }).catch(() => {});
+          }
+          audio.play().then(() => setPlaying(true)).catch(() => {
+            ['click','keydown','scroll'].forEach(e => document.addEventListener(e, tryAutoplay, { once: true }));
+          });
+        } else {
+          titleEl.textContent = 'No tracks';
+        }
+      })
+      .catch(() => {
+        // Fallback: no playlist.json found
+        titleEl.textContent = 'No music';
+        statusEl.textContent = 'Add tracks to /music/';
+      });
+
+    audio.volume = 0.7;
+  })();
+</script>
+
+</body>
+</html>
